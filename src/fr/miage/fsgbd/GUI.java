@@ -20,8 +20,9 @@ import java.util.stream.Stream;
 public class GUI extends JFrame implements ActionListener {
     TestInteger testInt = new TestInteger();
     BTreePlus<Integer> bInt;
-    private JButton buttonClean, buttonRemove, buttonLoad, buttonSave, buttonAddMany, buttonAddItem, buttonRefresh, buttonCharger;
+    private JButton buttonClean, buttonRemove, buttonLoad, buttonSave, buttonAddMany, buttonAddItem, buttonRefresh, buttonCharger,buttonSequentiel;
     private JTextField txtNbreItem, txtNbreSpecificItem, txtU, txtFile, removeSpecific;
+    private JList<Integer>listRecherche;
     private final JTree tree = new JTree();
 
     public GUI() {
@@ -30,7 +31,7 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == buttonLoad || e.getSource() == buttonClean || e.getSource() == buttonSave || e.getSource() == buttonRefresh) {
+        if (e.getSource() == buttonLoad || e.getSource() == buttonClean || e.getSource() == buttonSave || e.getSource() == buttonRefresh ||e.getSource() == buttonSequentiel) {
             if (e.getSource() == buttonLoad) {
                 BDeserializer<Integer> load = new BDeserializer<Integer>();
                 bInt = load.getArbre(txtFile.getText());
@@ -46,7 +47,15 @@ public class GUI extends JFrame implements ActionListener {
                 BSerializer<Integer> save = new BSerializer<Integer>(bInt, txtFile.getText());
             }else if (e.getSource() == buttonRefresh) {
                 tree.updateUI();
+            }else if (e.getSource() == buttonSequentiel) {
+                try {
+                    bInt.rechercherLigne();
+                } catch (IOException ioException) {
+                    System.out.println("Veuillez d'abbord charger les données du fichier");
+                    ioException.printStackTrace();
+                }
             }
+
         } else {
             if (bInt == null)
                 bInt = new BTreePlus<Integer>(Integer.parseInt(txtU.getText()), testInt);
@@ -81,7 +90,6 @@ public class GUI extends JFrame implements ActionListener {
             }
             else if (e.getSource() == buttonCharger)
             {
-                String content;
                 try(BufferedReader br = new BufferedReader(new FileReader("data.txt"))) {
                     int ligne = 0;
                     for(String line; (line = br.readLine()) != null; ) {
@@ -248,12 +256,19 @@ public class GUI extends JFrame implements ActionListener {
         c.gridwidth = 2;
         pane1.add(buttonCharger, c);
 
+        buttonSequentiel = new JButton("Lancer la recherche des 100 lignes");
+        c.gridx = 2;
+        c.gridy = 9;
+        c.weightx = 0.5;
+        c.gridwidth = 2;
+        pane1.add(buttonSequentiel, c);
+
         c.fill = GridBagConstraints.HORIZONTAL;
         c.ipady = 400;       //reset to default
         c.weighty = 1.0;   //request any extra vertical space
         c.gridwidth = 4;   //2 columns wide
         c.gridx = 0;
-        c.gridy = 9;
+        c.gridy = 10;
 
         JScrollPane scrollPane = new JScrollPane(tree);
         pane1.add(scrollPane, c);
@@ -270,6 +285,8 @@ public class GUI extends JFrame implements ActionListener {
         buttonClean.addActionListener(this);
         buttonRefresh.addActionListener(this);
         buttonCharger.addActionListener(this);
+        buttonSequentiel.addActionListener(this);
+
 
         return pane1;
     }

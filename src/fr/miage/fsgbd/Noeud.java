@@ -148,7 +148,7 @@ public class Noeud<Type> implements java.io.Serializable {
             i++;
         }
         this.keys.add(i, valeur);
-        this.pointeurs.put((int)valeur,position);
+        this.pointeurs.put((int)valeur,position-1);
     }
 
     /**

@@ -1,6 +1,14 @@
 package fr.miage.fsgbd;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 
 /**
@@ -93,5 +101,71 @@ public class BTreePlus<Type> implements java.io.Serializable {
             if (racine != newRacine)
                 racine = newRacine;
         }
+    }
+    public void rechercherLigne() throws IOException {
+
+        Long tempsSequentiel = (long)0, tempsIndex= (long)0, sequentielMin= (long)9999, sequentielMax= (long)0, indexMin= (long)9999, indexMax = (long)0;
+        ArrayList<Integer> valeurs = new ArrayList<>();
+        String id;
+        try(BufferedReader br = new BufferedReader(new FileReader("data.txt"))) {
+            int ligne = 0;
+            for(String line; (line = br.readLine()) != null; ) {
+                ligne++;
+                if (ligne%100 ==0) {
+                    id = line.substring(0, line.indexOf(","));
+                    int valeur = Integer.parseInt(id);
+                   valeurs.add(valeur);
+                }
+            }
+        } catch (IOException ioException) {
+            System.out.println("Veuillez d'abbord charger les données du fichier");
+        }
+        System.out.println("Recherche des lignes de maniere sequentielle: ");
+        for( Integer value : valeurs ) {
+            Long debut = System.nanoTime();
+            try(BufferedReader br = new BufferedReader(new FileReader("data.txt"))) {
+                for(String line; (line = br.readLine()) != null; ) {
+                     id = line.substring( 0, line.indexOf(","));
+                    if(Integer.parseInt(id) == (int)value)
+                    {
+                        Long fin = System.nanoTime();
+                        Long total = (fin-debut)/1000;
+                        System.out.println(line +" "+total+" microseconds");
+                        tempsSequentiel = tempsSequentiel+total;
+                        if (total > sequentielMax)
+                            sequentielMax = total;
+                        else if (total < sequentielMin)
+                            sequentielMin = total;
+                        break;
+                    }
+                }
+                // line is not visible here.
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
+        System.out.println("Temps total en sequentiel : "+tempsSequentiel+ " microseconds");
+
+        String line;
+        System.out.println("Recherche des lignes de maniere indexee: ");
+        for( Integer value : valeurs ) {
+            Long debut = System.nanoTime();
+            try (Stream<String> lines = Files.lines(Paths.get("data.txt"))) {
+                int test = Noeud.pointeurs.get(value);
+                line = lines.skip(test).findFirst().get();
+            }
+                 Long fin = System.nanoTime();
+                        Long total = (fin-debut)/1000;
+            System.out.println(line +" "+total+" microseconds");
+            tempsIndex = tempsIndex+total;
+            if (total > indexMax)
+                indexMax = total;
+            else if (total < indexMin)
+                indexMin = total;
+
+                    }
+        System.out.println("\nTemps total en sequentiel : "+tempsSequentiel+ " microseconds, en moyenne une recherche prend " +tempsSequentiel/100 +" microseconds la plus courte est de "+ sequentielMin +" microseconds et la plus longue de "+ sequentielMax+" microseconds");
+        System.out.println("Temps total en index : "+tempsIndex+ " microseconds, en moyenne une recherche prend " +tempsIndex/100 +" microseconds la plus courte est de "+ indexMin +" microseconds et la plus longue de "+ indexMax+" microseconds");
+
     }
 }
